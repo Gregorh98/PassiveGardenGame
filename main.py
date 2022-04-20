@@ -1,18 +1,17 @@
 from tkinter import *
 from math import floor, ceil
 
-
-class Plot():
+class Plot:
     def __init__(self, x, y):
         self.states = {"grass"  : 0,
-                       "tilledLand" : 1}
+                       "tilledLand" : 1,
+                       "wetLand" : 2}
         self.x = x
         self.y = y
         self.state = None
 
     def draw(self, canvas):
         self.graphicalPlot = garden.create_rectangle(x, y, x+gridSize, y+gridSize, fill=cGrass, outline=cGrassOutline)
-        #garden.tag_bind(self.graphicalPlot, "<1>", self.mouse_click)
         garden.tag_bind(self.graphicalPlot, "<ButtonPress-1>", self.mouse_click)
 
     def mouse_click(self, event):
@@ -20,12 +19,20 @@ class Plot():
         currentItem = itemsViewer.get(itemsViewer.curselection())
         if currentItem == "Hoe":
             self.hoeGround(event)
+        elif currentItem == "Watering Can":
+            self.waterGround(event)
 
     def hoeGround(self, event):
         if self.state != self.states["tilledLand"]:
             garden.itemconfig(self.graphicalPlot, fill=cTilledLand, outline=cTilledLandOutline)
             self.state = self.states["tilledLand"]
             print("Tilled")
+
+    def waterGround(self, event):
+        if self.state == self.states["tilledLand"]:
+            garden.itemconfig(self.graphicalPlot, fill=cWetLand, outline=cGrassOutline)
+            self.state = self.states["wetLand"]
+            print("Watered")
 
 root = Tk()
 root.resizable(False, False)
@@ -55,7 +62,7 @@ garden.grid(column=0, row=0, rowspan=2)
 for y in range(0, canvasHeight, 32):
     gardenData.append([])
     for x in range(0, canvasWidth, 32):
-        gardenData[0 if y==0 else int(y/gridSize)].append(Plot(x, y))
+        gardenData[0 if y == 0 else int(y/gridSize)].append(Plot(x, y))
         gardenData[0 if y == 0 else int(y / gridSize)][0 if x == 0 else int(x / gridSize)].draw(garden)
 
 print(">>",len(gardenData))
