@@ -16,17 +16,23 @@ class Plot():
 
 
 root = Tk()
+root.resizable(False, False)
 
-canvasHeight    = 1024
-canvasWidth     = 1024
+canvasHeight    = 320
+canvasWidth     = 320
 gridSize        = 32
-tools = ["Hoe", "Watering Can", "Trowel", "Dibber", "Fork", "Netting"]
-crops = ["Potato", "Peas", "Strawberry", "Corn", "Broccoli"]
-gardenData = []
+tools       = ["Hoe", "Watering Can", "Trowel", "Dibber", "Fork", "Netting"]
+crops       = ["Potato", "Peas", "Strawberry", "Corn", "Broccoli"]
+decoration  = ["Path", "Fence"]
+gardenData  = []
+
 
 def gardenClicked(event):
-    print((event.x, event.y))
-    print( ((floor(event.x/32), floor(event.y/32))),((ceil(event.x/32), ceil(event.y/32))) )
+    clickedPoint = {"x1": floor(event.x/gridSize), "y1": floor(event.y/gridSize), "x2": ceil(event.x/gridSize), "y2": ceil(event.y/gridSize)}
+    print(clickedPoint)
+    print(event.x, event.y)
+    garden.create_rectangle(clickedPoint["x1"]*gridSize, clickedPoint["y1"]*gridSize, clickedPoint["x2"]*gridSize, clickedPoint["y2"]*gridSize, fill="brown", outline="black")
+
 
 garden = Canvas(root)
 garden.bind("<Button-1>", gardenClicked)
@@ -34,10 +40,12 @@ garden.configure(background="green", height=canvasHeight, width=canvasWidth)
 garden.grid(column=0, row=0, rowspan=2)
 
 #prepareGarden
-"""for y in range(0, gridSize, canvasHeight):
+for y in range(0, gridSize, canvasHeight):
     gardenData.append([])
     for x in range(0, gridSize, canvasWidth):
-        gardenData[y].append(Plot(x/gridSize, y/gridSize, garden.create_rectangle(x, y, x+gridSize, y+gridSize, outline="darkgreen")))"""
+        gardenData[y].append(Plot(x, y, garden.create_rectangle(clickedPoint["x1"]*gridSize, clickedPoint["y1"]*gridSize, clickedPoint["x2"]*gridSize, clickedPoint["y2"]*gridSize, fill="brown", outline="black")))
+
+print(gardenData)
 
 def showTools():
     itemsViewer.delete(0, END)
@@ -45,6 +53,11 @@ def showTools():
         itemsViewer.insert(END, tool)
     itemsViewer.select_set(0)
 
+def showDecoration():
+    itemsViewer.delete(0, END)
+    for item in decoration:
+        itemsViewer.insert(END, item)
+    itemsViewer.select_set(0)
 
 def showCrops():
     itemsViewer.delete(0, END)
@@ -69,6 +82,9 @@ viewToolsButton.pack(side=RIGHT, padx=2, pady=5, fill=BOTH)
 viewSeedsButton = Button(itemsFrame, text="Seeds", command=showCrops)
 viewSeedsButton.pack(padx=2, pady=5, fill=BOTH)
 
+viewDecorationButton = Button(itemsFrame, text="Decoration", command=showDecoration)
+viewDecorationButton.pack(padx=2, pady=5, fill=BOTH)
+
 itemsFrame.pack(anchor=N, pady=5, padx=2, fill=BOTH)
 
 #Settings
@@ -82,6 +98,7 @@ viewSeedsButton.pack(padx=2, pady=5, fill=BOTH)
 
 viewSeedsButton = Button(settingsFrame, text="Settings", state=DISABLED)
 viewSeedsButton.pack(padx=2, pady=5, fill=BOTH)
+
 
 settingsFrame.pack(anchor=S, fill=BOTH)
 
