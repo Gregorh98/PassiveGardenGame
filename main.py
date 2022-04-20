@@ -3,49 +3,44 @@ from math import floor, ceil
 
 
 class Plot():
-    def __init__(self, x, y, gridPlot):
+    def __init__(self, x, y):
         self.states = {"Empty"  : 0,
                        "Tilled" : 1}
         self.x = x
         self.y = y
-        self.gridPlot = gridPlot
         self.state = None
 
-    def hoe(self):
-        self.state = self.states["Tilled"]
+    def draw(self, canvas):
+        graphicalPlot = garden.create_rectangle(x, y, x+gridSize, y+gridSize, fill="green", outline="black")
+        canvas.tag_bind(graphicalPlot, "<1>", self.mouse_click)
 
+    def mouse_click(self, event):
+        print((self.x, self.y))
+        print("clicked!")
 
 root = Tk()
 root.resizable(False, False)
 
-canvasHeight    = 320
-canvasWidth     = 320
+canvasHeight    = 640
+canvasWidth     = 640
 gridSize        = 32
 tools       = ["Hoe", "Watering Can", "Trowel", "Dibber", "Fork", "Netting"]
 crops       = ["Potato", "Peas", "Strawberry", "Corn", "Broccoli"]
 decoration  = ["Path", "Fence"]
 gardenData  = []
 
-
-def gardenClicked(event):
-    clickedPoint = {"x1": floor(event.x/gridSize), "y1": floor(event.y/gridSize), "x2": ceil(event.x/gridSize), "y2": ceil(event.y/gridSize)}
-    print(clickedPoint)
-    print(event.x, event.y)
-    garden.create_rectangle(clickedPoint["x1"]*gridSize, clickedPoint["y1"]*gridSize, clickedPoint["x2"]*gridSize, clickedPoint["y2"]*gridSize, fill="brown", outline="black")
-
-
 garden = Canvas(root)
-garden.bind("<Button-1>", gardenClicked)
 garden.configure(background="green", height=canvasHeight, width=canvasWidth)
 garden.grid(column=0, row=0, rowspan=2)
 
 #prepareGarden
-for y in range(0, gridSize, canvasHeight):
+for y in range(0, canvasHeight, 32):
     gardenData.append([])
-    for x in range(0, gridSize, canvasWidth):
-        gardenData[y].append(Plot(x, y, garden.create_rectangle(clickedPoint["x1"]*gridSize, clickedPoint["y1"]*gridSize, clickedPoint["x2"]*gridSize, clickedPoint["y2"]*gridSize, fill="brown", outline="black")))
+    for x in range(0, canvasWidth, 32):
+        gardenData[0 if y==0 else int(y/gridSize)].append(Plot(x, y))
+        gardenData[0 if y == 0 else int(y / gridSize)][0 if x == 0 else int(x / gridSize)].draw(garden)
 
-print(gardenData)
+print(">>",len(gardenData))
 
 def showTools():
     itemsViewer.delete(0, END)
