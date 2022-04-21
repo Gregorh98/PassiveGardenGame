@@ -1,49 +1,103 @@
 from tkinter import *
-from math import floor, ceil
+import datetime
+import random
+
+class Plant():
+    def __init__(self, name):
+        self.states         = {"placed": 0,
+                               "buried": 1,
+                               "grown":  2}
+
+        self.name           = name
+        self.growTime       = crops[name]["growTime"]
+        self.harvestYield   = crops[name]["harvestYield"]
+        self.seedColour     = crops[name]["seedColour"]
+        self.plantedOn      = todaysDate
+        self.harvestDate    = self.plantedOn + datetime.timedelta(days=self.growTime)
+        self.state          = self.states["placed"]
+
+    def draw(self, x, y):
+        offset = random.choice(range(int((0-gridSize)/4), int((gridSize/4))))
+        self.seed = garden.create_oval(
+            x+(gridSize/3) + offset,
+            y+(gridSize/3) + offset,
+            x+gridSize-(gridSize/3) + offset,
+            y+gridSize-(gridSize/3) + offset,
+            fill=self.seedColour)
+
+        garden.tag_bind(self.seed, "<ButtonPress-1>", self.mouse_click)
+
+    def mouse_click(self, event):
+        currentItem = itemsViewer.get(itemsViewer.curselection())
+        if currentItem == "Trowel":
+            self.burySeed()
+
+    def burySeed(self):
+        garden.delete(self.seed)
+        self.state = self.states["buried"]
+
 
 class Plot:
     def __init__(self, x, y):
         self.states = {"grass"  : 0,
                        "tilledLand" : 1,
-                       "wetLand" : 2}
+                       "wetLand" : 2,
+                       "planted" : 3}
         self.x = x
         self.y = y
         self.state = None
+        self.plant = None
 
-    def draw(self, canvas):
+    def draw(self):
         self.graphicalPlot = garden.create_rectangle(x, y, x+gridSize, y+gridSize, fill=cGrass, outline=cGrassOutline)
         garden.tag_bind(self.graphicalPlot, "<ButtonPress-1>", self.mouse_click)
 
     def mouse_click(self, event):
-        print((self.x, self.y))
         currentItem = itemsViewer.get(itemsViewer.curselection())
         if currentItem == "Hoe":
-            self.hoeGround(event)
+            self.hoeGround()
         elif currentItem == "Watering Can":
-            self.waterGround(event)
+            self.waterGround()
+        elif currentItem == "Trowel":
+            return
+        else:
+            #Seed
+            self.plantGround(currentItem)
 
-    def hoeGround(self, event):
+    def hoeGround(self):
         if self.state != self.states["tilledLand"]:
             garden.itemconfig(self.graphicalPlot, fill=cTilledLand, outline=cTilledLandOutline)
             self.state = self.states["tilledLand"]
             print("Tilled")
 
-    def waterGround(self, event):
+    def plantGround(self, plant):
         if self.state == self.states["tilledLand"]:
-            garden.itemconfig(self.graphicalPlot, fill=cWetLand, outline=cGrassOutline)
-            self.state = self.states["wetLand"]
-            print("Watered")
+            #garden.itemconfig(self.graphicalPlot, fill=cDryLand, outline=cTilledLandOutline)
+            self.plant = Plant(plant)
+            self.plant.draw(self.x, self.y)
+            self.state = self.states["planted"]
+            print("Planted")
+
+    def waterGround(self):
+        if self.state == self.states["planted"]:
+            if self.plant.state == self.plant.states["buried"]:
+                garden.itemconfig(self.graphicalPlot, fill=cWetLand, outline=cGrassOutline)
+                self.state = self.states["wetLand"]
+                print("Watered")
+
 
 root = Tk()
 root.resizable(False, False)
 
-canvasHeight    = 320
-canvasWidth     = 320
+canvasHeight    = 640
+canvasWidth     = 640
 gridSize        = 32
-tools       = ["Hoe", "Watering Can", "Trowel", "Dibber", "Fork", "Netting"]
-crops       = ["Potato", "Peas", "Strawberry", "Corn", "Broccoli"]
+tools       = ["Hoe", "Trowel", "Watering Can", "Netting", "Fork"]
+# crops       = ["Potato", "Peas", "Strawberry", "Corn", "Broccoli"]
+crops       = {"Broccoli":{"growTime":30, "harvestYield":1, "seedColour":"black", "readyColour":"Purple"}, "Potato":{"growTime":15, "harvestYield":8, "seedColour":"yellow", "readyColour":"yellow"}}
 decoration  = ["Path", "Fence"]
 gardenData  = []
+todaysDate  = datetime.datetime.today().date()
 
 cTilledLand         = "#52402a"
 cTilledLandOutline  = "#39301d"
@@ -52,7 +106,6 @@ cWetLand            = "#482f1f"
 cGrass              = "#2c3c1e"
 cGrassOutline       = "#202a15"
 cPath               = "#a9b1b7"
-
 
 garden = Canvas(root)
 garden.configure(background=cGrass, height=canvasHeight, width=canvasWidth)
@@ -63,7 +116,7 @@ for y in range(0, canvasHeight, 32):
     gardenData.append([])
     for x in range(0, canvasWidth, 32):
         gardenData[0 if y == 0 else int(y/gridSize)].append(Plot(x, y))
-        gardenData[0 if y == 0 else int(y / gridSize)][0 if x == 0 else int(x / gridSize)].draw(garden)
+        gardenData[0 if y == 0 else int(y / gridSize)][0 if x == 0 else int(x / gridSize)].draw()
 
 print(">>",len(gardenData))
 
@@ -81,14 +134,14 @@ def showDecoration():
 
 def showCrops():
     itemsViewer.delete(0, END)
-    crops.sort()
-    for crop in crops:
+    for crop in crops.keys():
         itemsViewer.insert(END, crop)
     itemsViewer.select_set(0)
 
 #Sidebar
 sideBar = Frame(root)
 Label(sideBar, text="Garden Game").pack(padx=2, fill=BOTH)
+Label(sideBar, text=todaysDate).pack(padx=2, fill=BOTH)
 
 #Items
 itemsFrame = LabelFrame(sideBar, text="Items")
