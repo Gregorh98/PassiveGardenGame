@@ -1,7 +1,7 @@
 from tkinter import *
 import datetime
 import random
-
+import json
 
 class Plant():
     def __init__(self, name):
@@ -46,6 +46,8 @@ class Plant():
 
 class Plot:
     def __init__(self, x, y):
+        self.id= str(((x, y)))
+
         # State
         self.states = {"grass": 0,
                        "tilledLand": 1,
@@ -63,12 +65,13 @@ class Plot:
         # Soil dryness
         self.dry = True
         self.dateWatered = None
+        self.daysSinceLastWatered = None
 
-    def getDaysSinceLastWatered(self):
+    def updateDaysSinceLastWatered(self):
         if self.dateWatered is not None:
-            return todaysDate - self.dateWatered
+            self.daysSinceLastWatered = todaysDate - self.dateWatered
         else:
-            return -1
+            self.daysSinceLastWatered = -1
 
     def draw(self):
         self.graphicalPlot = garden.create_rectangle(x, y, x + gridSize, y + gridSize, fill=cGrass,
@@ -111,13 +114,15 @@ class Plot:
                     print("Watered")
 
     def update(self):
+        self.updateDaysSinceLastWatered()
+
         #Dry plot out each day
-        if self.getDaysSinceLastWatered() > 0:
+        if self.daysSinceLastWatered > 0:
             self.state = self.dry = True
 
         if self.plant is not None:
             #Kill plant if plot unwatered
-            if self.getDaysSinceLastWatered() > self.plant.maxDryDaysBeforeDeath:
+            if self.daysSinceLastWatered > self.plant.maxDryDaysBeforeDeath:
                 self.plant.kill()
 
             #Check to grow plant
@@ -185,6 +190,30 @@ def showCrops():
         itemsViewer.insert(END, crop)
     itemsViewer.select_set(0)
 
+def save():
+    jsonData = {}
+    jsonData["gardenData"] = {}
+    for y in gardenData:
+        for x in y:
+            excludedPlotVars    = ["states", "graphicalPlot"]
+            updatedDict         = {}
+
+            for each in x.__dict__:
+                if each not in excludedPlotVars:
+                    updatedDict[each] = x.__dict__[each]
+            jsonData["gardenData"][x.id] = updatedDict
+
+    jsonData["systemData"] = {}
+    jsonData["systemData"]["gridSize"] = gridSize
+
+    with open("save.json") as f:
+        jsonifiedData = json.dumps(jsonData)
+        print(jsonifiedData)
+        f.write(jsonifiedData)
+
+def load():
+    print("Load")
+
 
 # Sidebar
 sideBar = Frame(root)
@@ -211,10 +240,10 @@ itemsFrame.pack(anchor=N, pady=5, padx=2, fill=BOTH)
 # Settings
 settingsFrame = LabelFrame(sideBar, text="Settings")
 
-viewToolsButton = Button(settingsFrame, text="Save", state=DISABLED)
+viewToolsButton = Button(settingsFrame, text="Save", command=save)
 viewToolsButton.pack(padx=2, pady=5, fill=BOTH)
 
-viewSeedsButton = Button(settingsFrame, text="Load", state=DISABLED)
+viewSeedsButton = Button(settingsFrame, text="Load", command=load)
 viewSeedsButton.pack(padx=2, pady=5, fill=BOTH)
 
 viewSeedsButton = Button(settingsFrame, text="Settings", state=DISABLED)
