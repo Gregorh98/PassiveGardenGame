@@ -7,7 +7,6 @@ class Plant():
         self.states         = {"placed": 0,
                                "buried": 1,
                                "grown":  2}
-
         self.name           = name
         self.growTime       = crops[name]["growTime"]
         self.harvestYield   = crops[name]["harvestYield"]
@@ -15,6 +14,9 @@ class Plant():
         self.plantedOn      = todaysDate
         self.harvestDate    = self.plantedOn + datetime.timedelta(days=self.growTime)
         self.state          = self.states["placed"]
+
+    def grow(self):
+        print("plant is ready")
 
     def draw(self, x, y):
         offset = random.choice(range(int((0-gridSize)/4), int((gridSize/4))))
@@ -85,6 +87,10 @@ class Plot:
                 self.state = self.states["wetLand"]
                 print("Watered")
 
+    def updateAll(self):
+        if self.state == self.states["planted"]:
+            if todaysDate == self.plant.harvestDate:
+                self.plant.grow()
 
 root = Tk()
 root.resizable(False, False)
@@ -141,7 +147,7 @@ def showCrops():
 #Sidebar
 sideBar = Frame(root)
 Label(sideBar, text="Garden Game").pack(padx=2, fill=BOTH)
-Label(sideBar, text=todaysDate).pack(padx=2, fill=BOTH)
+Label(sideBar, text=f"Date: {todaysDate}").pack(padx=2, fill=BOTH)
 
 #Items
 itemsFrame = LabelFrame(sideBar, text="Items")
@@ -178,4 +184,11 @@ settingsFrame.pack(anchor=S, fill=BOTH)
 sideBar.grid(column=1, row=0, sticky=N)
 
 showTools()
-root.mainloop()
+
+#Main Gameloop
+while True:
+    for y in gardenData:
+        for x in y:
+            x.updateAll()
+
+    root.update()
